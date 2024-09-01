@@ -12,7 +12,7 @@ const Chat = () => {
   const [room, setRoom] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const ENDPOINT = 'http://127.0.0.1:5000';
+  const ENDPOINT = 'http://127.0.0.1:3002';
 
   useEffect(() => {
     const {name, room } = queryString.parse(window.location.search);

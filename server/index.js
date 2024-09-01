@@ -2,10 +2,16 @@ const express = require('express');
 const socketio = require('socket.io');
 const cors = require('cors');
 const http = require('http');
-const router = require('./routes/chatRouter');
-const { addUser, removeUser, getUser, getUsersInRoom } = require('./users')
+const dotenv = require('dotenv');
+dotenv.config({path: './.env'});
+const mongoose = require('mongoose');
 
-const PORT = process.env.PORT || 5000;
+//import routes
+const router = require('./routes/chatRouter');
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
+const UserRoute = require('./routes/UserRoute');
+const ChatRoute = require('./routes/ChatRoute');
+const MessageRoute = require('./routes/MessageRoute');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,13 +20,16 @@ const io = socketio(server, {cors: {origin: '*'}});
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
-app.use(router);
 
+//routes
+app.use("/", router);
+app.use('/api/v1/users', UserRoute)
+app.use('/api/v1/chat', ChatRoute)
+app.use('/api/v1/message', MessageRoute)
+
+// Socket.io implementation
 io.on('connection', (socket) => {
     console.log('We have a new connection!!!');
-    // socket.on('disconnect', () => {
-    //     console.log('User had left!!!');
-    // })
 
     socket.on('join', ({name, room}, callback) => {
         const {error, user} = addUser({id: socket.id, name, room});  
@@ -58,4 +67,17 @@ io.on('connection', (socket) => {
 });
 
 
-server.listen(PORT, () => console.log(`Server has started on port ${PORT}`));
+//mongodb connect & starting server
+const PORT = process.env.PORT || 3002;
+const start = async () => {
+    try {
+      await mongoose.connect(process.env.LOCAL_CONN_STR);
+      console.log("Database connected");
+      server.listen(PORT, () => {
+        console.log(`server running on ${PORT}`);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+start();
